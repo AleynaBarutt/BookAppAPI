@@ -1,20 +1,25 @@
-﻿using BookApp.Models;
-using BookApp.Repositories;
-using Microsoft.AspNetCore.Http;
+﻿using Entities.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Services.Contracts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace BookApp.Controllers
+namespace Presentation.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/books")]
     public class BooksController : ControllerBase
     {
         // consructor üzerinde new DI İfadesi
-        private readonly RepositoryContext _repositoryContext;
-        public BooksController(RepositoryContext context)
+        private readonly IServiceManager _manager;
+
+        public BooksController(IServiceManager manager)
         {
-            _repositoryContext = context;
+            _manager = manager;
         }
 
         [HttpGet]
@@ -22,7 +27,7 @@ namespace BookApp.Controllers
         {
             try
             {
-                var books = _repositoryContext.Books.ToList();
+                var books = _manager.BookService.GetAllBooks(false);
                 return Ok(books);
             }
             catch (Exception ex)
@@ -40,10 +45,9 @@ namespace BookApp.Controllers
             {
                 //Bu şekilde de yapılır.
                 //var book = ApplicationContext.Books.FirstOrDefault(x => x.Id == id);
-                var book = _repositoryContext
-                    .Books
-                    .Where(x => x.Id.Equals(id))
-                    .SingleOrDefault(); // tek bir kayıt ya da null değeri döndür
+                var book = _manager
+                    .BookService.GetOneBookById(id, false);
+
                 if (book == null)
                     return NotFound(); //404
 
@@ -63,8 +67,8 @@ namespace BookApp.Controllers
                 if (book is null)
                     return BadRequest();//400 Code
 
-                _repositoryContext.Books.Add(book);
-                _repositoryContext.SaveChanges();
+                _manager.BookService.CreateOneBook(book);
+
                 return StatusCode(201, book); //created
             }
             catch (Exception ex)
@@ -78,31 +82,17 @@ namespace BookApp.Controllers
         {
             try
             {
-                // check book
-                var entity = _repositoryContext
-                    .Books
-                    .Where(x => x.Id == id)
-                    .SingleOrDefault();
+                if (book is null)
+                    return BadRequest();//400 Code
+                _manager.BookService.UpdateOneBook(id, book, true);
+                return NoContent(); //204
 
-                if (entity is null)
-                    return NotFound(); //404
-
-                //check id
-                if (id != book.Id)
-                    return BadRequest(); //400
-
-                //yeni değerleri maple daha sonra mapper ile
-                entity.Title = book.Title;
-                entity.Price = book.Price;
-                _repositoryContext.SaveChanges();
-
-                return Ok(book); //200 success
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-            
+
         }
 
         [HttpDelete("{id:int}")]
@@ -110,20 +100,7 @@ namespace BookApp.Controllers
         {
             try
             {
-                var entity = _repositoryContext
-                    .Books
-                    .Where(x => x.Id == id)
-                    .SingleOrDefault();
-
-                if (entity is null)
-                    return NotFound(new
-                    {
-                        StatusCode = 404,
-                        message = $"Book with id:{id} could not found."
-                    }); //404 
-
-                _repositoryContext.Books.Remove(entity);
-                _repositoryContext.SaveChanges();
+                _manager.BookService.DeleteOneBook(id, false);
 
                 return NoContent(); //204
             }
@@ -131,7 +108,7 @@ namespace BookApp.Controllers
             {
                 throw new Exception(ex.Message);
             }
-          
+
         }
 
         [HttpPatch("{id:int}")] //  nesnenin belli alanları güncellenir.JSONPATCH //415 unsupported media types
@@ -140,16 +117,15 @@ namespace BookApp.Controllers
             try
             {
                 //check entity
-                var entity = _repositoryContext
-                    .Books
-                    .Where(x => x.Id == id)
-                    .SingleOrDefault();
+                var entity = _manager
+                    .BookService
+                    .GetOneBookById(id, true);
 
                 if (entity is null)
                     return NotFound(); //404
 
                 book.ApplyTo(entity);
-                _repositoryContext.SaveChanges();
+                _manager.BookService.UpdateOneBook(id, entity, true);
 
                 return NoContent(); //204
             }
@@ -157,7 +133,7 @@ namespace BookApp.Controllers
             {
                 throw new Exception(ex.Message);
             }
-            
+
         }
     }
 }

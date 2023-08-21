@@ -1,20 +1,24 @@
-using BookApp.Repositories;
+
+using BookApp.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Repositories.EfCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers()
+    .AddApplicationPart(typeof(Presentation.AssemblyReference).Assembly)
     .AddNewtonsoftJson(); // httppatch için ekledik.
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//IOC DB CONTEXT TANIMI YAPILDI.
-builder.Services.AddDbContext<RepositoryContext>(options => 
-    options.UseSqlServer(builder.Configuration.GetConnectionString("sqlConnection"))
-);
+//Extensions kýsmýnda bunun conf yaptýk.
+builder.Services.ConfigureSqlContext(builder.Configuration);
+builder.Services.ConfigureRepositoryManager();
+builder.Services.ConfigureServiceManager();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
