@@ -24,6 +24,9 @@ builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
 builder.Services.ConfigureLoggerService();
 
+//automapper eklentisi yaptýk.
+builder.Services.AddAutoMapper(typeof(Program));
+
 var app = builder.Build();
 
 //middleware extensions
