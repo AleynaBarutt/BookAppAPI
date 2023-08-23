@@ -1,4 +1,5 @@
-﻿using Entities.Models;
+﻿using Entities.Exceptions;
+using Entities.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Services.Contracts;
@@ -25,115 +26,71 @@ namespace Presentation.Controllers
         [HttpGet]
         public IActionResult GetAllBooks()
         {
-            try
-            {
                 var books = _manager.BookService.GetAllBooks(false);
                 return Ok(books);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-
-
+            
         }
 
         [HttpGet("{id:int}")]
         public IActionResult GetOneBook([FromRoute(Name = "id")] int id)
         {
-            try
-            {
                 //Bu şekilde de yapılır.
                 //var book = ApplicationContext.Books.FirstOrDefault(x => x.Id == id);
                 var book = _manager
                     .BookService.GetOneBookById(id, false);
 
                 if (book == null)
-                    return NotFound(); //404
+                    throw  new BookNotFoundException(id); //404
 
                 return Ok(book); //200 status code 204 no content
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            
         }
 
         [HttpPost] //Inmemory çalışır program kapanınca sadece constructorda eklenenler kalır.
         public IActionResult CreateOneBook([FromBody] Book book)
         {
-            try
-            {
                 if (book is null)
                     return BadRequest();//400 Code
 
                 _manager.BookService.CreateOneBook(book);
 
                 return StatusCode(201, book); //created
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            
         }
 
         [HttpPut("{id:int}")] //güncelleme //409 conflict
         public IActionResult UpdateOneBook([FromRoute(Name = "id")] int id, [FromBody] Book book)
         {
-            try
-            {
                 if (book is null)
                     return BadRequest();//400 Code
                 _manager.BookService.UpdateOneBook(id, book, true);
                 return NoContent(); //204
-
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
 
         }
 
         [HttpDelete("{id:int}")]
         public IActionResult DeleteOneBook([FromRoute(Name = "id")] int id)
         {
-            try
-            {
                 _manager.BookService.DeleteOneBook(id, false);
 
                 return NoContent(); //204
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+          
 
         }
 
         [HttpPatch("{id:int}")] //  nesnenin belli alanları güncellenir.JSONPATCH //415 unsupported media types
         public IActionResult PartialUpdateOneBook([FromRoute(Name = "id")] int id, [FromBody] JsonPatchDocument<Book> book)
         {
-            try
-            {
                 //check entity
                 var entity = _manager
                     .BookService
                     .GetOneBookById(id, true);
 
-                if (entity is null)
-                    return NotFound(); //404
-
                 book.ApplyTo(entity);
                 _manager.BookService.UpdateOneBook(id, entity, true);
 
                 return NoContent(); //204
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-
+           
         }
     }
 }
