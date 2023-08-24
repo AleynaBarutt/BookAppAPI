@@ -10,6 +10,8 @@ namespace BookApp.Utilities.AutoMapper
         {
             //1.kısımdan gelen 2.kısma setlenir.
             CreateMap<BookDtoForUpdate, Book>();
+
+            CreateMap<Book, BookDto>();
         }
     }
 }

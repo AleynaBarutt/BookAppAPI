@@ -11,7 +11,14 @@ LogManager.LoadConfiguration(String.Concat(Directory.GetCurrentDirectory(),"/nlo
 
 
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(config =>
+{
+    //content negotiation yapýldý.
+    config.RespectBrowserAcceptHeader = true;
+    config.ReturnHttpNotAcceptable = true; //406 NotAcceptable
+})
+    .AddCustomCsvFormatter() //CSV FORMATINDA ÇIKTI
+    .AddXmlDataContractSerializerFormatters()
     .AddApplicationPart(typeof(Presentation.AssemblyReference).Assembly)
     .AddNewtonsoftJson(); // httppatch için ekledik.
 
