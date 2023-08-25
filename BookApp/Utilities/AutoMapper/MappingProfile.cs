@@ -9,9 +9,12 @@ namespace BookApp.Utilities.AutoMapper
         public MappingProfile()
         {
             //1.kısımdan gelen 2.kısma setlenir.
-            CreateMap<BookDtoForUpdate, Book>();
-
+            CreateMap<BookDtoForUpdate, Book>().ReverseMap();
+            
             CreateMap<Book, BookDto>();
+
+            CreateMap<BookDtoForInsertion, Book>();
+
         }
     }
 }
