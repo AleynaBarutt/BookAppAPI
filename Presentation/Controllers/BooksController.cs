@@ -25,20 +25,20 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAllBooks()
+        public async Task<IActionResult> GetAllBooksAsync()
         {
-                var books = _manager.BookService.GetAllBooks(false);
+                var books = await _manager.BookService.GetAllBooksAsync(false);
                 return Ok(books);
             
         }
 
         [HttpGet("{id:int}")]
-        public IActionResult GetOneBook([FromRoute(Name = "id")] int id)
+        public async Task<IActionResult> GetOneBookAsync([FromRoute(Name = "id")] int id)
         {
                 //Bu şekilde de yapılır.
                 //var book = ApplicationContext.Books.FirstOrDefault(x => x.Id == id);
-                var book = _manager
-                    .BookService.GetOneBookById(id, false);
+                var book = await _manager
+                    .BookService.GetOneBookByIdAsync(id, false);
 
                 if (book == null)
                     throw  new BookNotFoundException(id); //404
@@ -48,7 +48,7 @@ namespace Presentation.Controllers
         }
 
         [HttpPost] //Inmemory çalışır program kapanınca sadece constructorda eklenenler kalır.
-        public IActionResult CreateOneBook([FromBody] BookDtoForInsertion bookDto)
+        public async Task<IActionResult> CreateOneBookAsync([FromBody] BookDtoForInsertion bookDto)
         {
                 if (bookDto is null)
                     return BadRequest();//400 Code
@@ -56,14 +56,14 @@ namespace Presentation.Controllers
                 if (!ModelState.IsValid)
                      return UnprocessableEntity(ModelState); //422
 
-                var book =_manager.BookService.CreateOneBook(bookDto);
+                var book = await _manager.BookService.CreateOneBookAsync(bookDto);
 
                 return StatusCode(201, book); //created
             
         }
 
         [HttpPut("{id:int}")] //güncelleme //409 conflict
-        public IActionResult UpdateOneBook([FromRoute(Name = "id")] int id, 
+        public async  Task<IActionResult> UpdateOneBookAsync([FromRoute(Name = "id")] int id, 
             [FromBody] BookDtoForUpdate bookDto)
         {
                 if (bookDto is null)
@@ -72,15 +72,15 @@ namespace Presentation.Controllers
                 if (!ModelState.IsValid)
                     return UnprocessableEntity(ModelState); //422
 
-                _manager.BookService.UpdateOneBook(id, bookDto, false);
+                await _manager.BookService.UpdateOneBookAsync(id, bookDto, false);
                 return NoContent(); //204
 
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteOneBook([FromRoute(Name = "id")] int id)
+        public async Task<IActionResult> DeleteOneBookAsync([FromRoute(Name = "id")] int id)
         {
-                _manager.BookService.DeleteOneBook(id, false);
+                await _manager.BookService.DeleteOneBookAsync(id, false);
 
                 return NoContent(); //204
           
@@ -88,13 +88,13 @@ namespace Presentation.Controllers
         }
 
         [HttpPatch("{id:int}")] //  nesnenin belli alanları güncellenir.JSONPATCH //415 unsupported media types
-        public IActionResult PartialUpdateOneBook([FromRoute(Name = "id")] int id,
+        public async Task<IActionResult> PartialUpdateOneBookAsync([FromRoute(Name = "id")] int id,
             [FromBody] JsonPatchDocument<BookDtoForUpdate> bookPatch)
         {
                 if(bookPatch is null)
                     return BadRequest();
 
-                var result = _manager.BookService.GetOneForPatch(id, false);
+                var result = await _manager.BookService.GetOneForPatchAsync(id, false);
 
                 bookPatch.ApplyTo(result.bookDtoForUpdate,ModelState);
                 TryValidateModel(result.bookDtoForUpdate);
@@ -102,7 +102,7 @@ namespace Presentation.Controllers
                 if(!ModelState.IsValid)
                     return UnprocessableEntity();
 
-                 _manager.BookService.SaveChangesForPatch(result.bookDtoForUpdate, result.book);
+                await _manager.BookService.SaveChangesForPatchAsync(result.bookDtoForUpdate, result.book);
 
                 return NoContent(); //204
            

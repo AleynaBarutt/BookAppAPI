@@ -11,8 +11,10 @@ namespace Repositories.Contracts
     {
         // baseden gelen metotlar hariç book için ekstra metot
         //yazarsak buraya eklenir.
-        IQueryable<Book> GetAllBooks(bool  trackChanges);
-        Book GetOneBookById(int id, bool  trackChanges);
+        Task<IEnumerable<Book>> GetAllBooksAsync(bool  trackChanges);
+        Task<Book> GetOneBookByIdAsync(int id, bool  trackChanges);
+
+        //tracking olduğu için async eklemeyiz.
         void CreateOneBook(Book book);
         void UpdateOneBook(Book book);
         void DeleteOneBook(Book book);
