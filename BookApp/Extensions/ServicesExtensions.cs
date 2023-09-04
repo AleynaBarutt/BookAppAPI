@@ -3,6 +3,7 @@ using Repositories.Contracts;
 using Repositories.EfCore;
 using Services.Contracts;
 using Services;
+using Presentation.ActionFilters;
 
 namespace BookApp.Extensions
 {
@@ -21,6 +22,12 @@ namespace BookApp.Extensions
 
         public static void ConfigureLoggerService(this IServiceCollection services) =>
             services.AddSingleton<ILoggerService, LoggerManager>();
+
+        public static void ConfigureActionFilters(this IServiceCollection services)
+        {
+            services.AddScoped<ValidationFilterAttribute>();
+            services.AddSingleton<LogFilterAttribute>();
+        }
         
     }
 }
